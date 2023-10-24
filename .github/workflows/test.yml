@@ -5,6 +5,7 @@ on:
     paths-ignore:
       - 'README.md'
       - 'docs/**'
+      - 'examples/**'
 
 jobs:
   # ensure the code builds...
@@ -25,7 +26,7 @@ jobs:
           go mod download
       - name: Build
         run: |
-          go build -v ./b1ddi/b1ddi   
+          go build -v .
           
   lint:
     name: Go Linter
@@ -73,4 +74,4 @@ jobs:
           DHCP_HOST: ${{ secrets.DHCP_HOST }}
           DNS_HOST: ${{ secrets.DNS_HOST }}
         run: |
-          go test -v -cover ./b1ddi/b1ddi
+          go test -v -cover ./internal
