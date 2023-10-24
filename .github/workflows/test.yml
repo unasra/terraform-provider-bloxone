@@ -74,4 +74,4 @@ jobs:
           DHCP_HOST: ${{ secrets.DHCP_HOST }}
           DNS_HOST: ${{ secrets.DNS_HOST }}
         run: |
-          go test -v -cover ./internal
+          go test -v -cover ./internal/...
