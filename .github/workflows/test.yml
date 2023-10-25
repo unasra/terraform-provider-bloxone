@@ -114,8 +114,8 @@ jobs:
         timeout-minutes: 10
         env:
           TF_ACC: "1"
-          B1DDI_HOST: ${{ secrets.BLOXONE_HOST }}
-          B1DDI_API_KEY: ${{ secrets.BLOXONE_API_KEY }}
+          BLOXONE_HOST: ${{ secrets.BLOXONE_HOST }}
+          BLOXONE_API_KEY: ${{ secrets.BLOXONE_API_KEY }}
           DHCP_HOST: ${{ secrets.DHCP_HOST }}
           DNS_HOST: ${{ secrets.DNS_HOST }}
         run: |
