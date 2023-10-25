@@ -8,18 +8,64 @@ on:
       - 'examples/**'
 
 jobs:
-  tests:
-    name: Terraform acceptance tests
+  # ensure the code builds...
+  build:
+    name: Build
     runs-on: ubuntu-latest
-    environment: testing
+    timeout-minutes: 5
     steps:
+      - uses: actions/checkout@v4.1.1
       - name: Setup Go 1.19
         uses: actions/setup-go@v4.1.0
         with:
           go-version: '1.19'
+          cache-dependency-path: go.sum
         id: go
-      - name: Check out the code into the Go module directory
-        uses: actions/checkout@v4.1.1
+      - name: Get dependencies
+        run: go get .
+      - name: Build
+        run: go build -v ./...
+      - name: Test
+        run: go test
+          
+  lint:
+    name: Go Linter
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    needs: build
+    steps:
+      - uses: actions/checkout@v4.1.1
+      - name: Setup Go 1.19
+        uses: actions/setup-go@v4.1.0
+        with:
+          go-version: '1.19'
+          cache: false
+      - name: golangci-lint
+        uses: golangci/golangci-lint-action@v3
+        with:
+          version: v1.54
+          args: --timeout=10m --max-issues-per-linter 0 --max-same-issues 0
+
+      - name: Run go lint
+        run: |
+          curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(go env GOPATH)/bin v1.54.2
+          golangci-lint run --max-issues-per-linter 0 --max-same-issues 0 --timeout 10m
+          
+  tests:
+    name: Terraform acceptance tests
+    runs-on: ubuntu-latest
+    environment: testing
+    needs: build
+    steps:
+      - uses: actions/checkout@v4.1.1
+      - name: Setup Go 1.19
+        uses: actions/setup-go@v4.1.0
+        with:
+          go-version: '1.19'
+          cache-dependency-path: go.sum
+        id: go
+      - name: Get dependencies
+        run: go get .
       - name: Run tests
         timeout-minutes: 10
         env:
@@ -29,5 +75,4 @@ jobs:
           DHCP_HOST: ${{ secrets.DHCP_HOST }}
           DNS_HOST: ${{ secrets.DNS_HOST }}
         run: |
-          env
-          go test -v -cover ./internal/...
+          go test $(go list ./... | grep -v 'vendor') -v -cover
