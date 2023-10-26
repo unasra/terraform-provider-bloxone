@@ -18,6 +18,11 @@ jobs:
       - uses: actions/setup-go@v4.1.0
         with:
           go-version: '1.19'
+      - name: go mod
+        run: |
+          go mod tidy
+          git diff --exit-code -- go.mod go.sum || \
+            (echo; echo "Unexpected difference in go.mod/go.sum files. Run 'go mod tidy' command or revert any go.mod/go.sum changes and commit."; exit 1)
       - name: Build
         run: go build -v ./...
       - name: Test
@@ -38,25 +43,11 @@ jobs:
           version: v1.54
           args: --timeout=10m --max-issues-per-linter 0 --max-same-issues 0
 
-  acc-test:
-    name: Terraform acceptance tests
+  tfproviderlint:
+    name: Terraform Provider Lint
     runs-on: ubuntu-latest
-    environment: testing
     steps:
-      - uses: actions/checkout@v4.1.1
-        with:
-          ref: ${{ github.event.pull_request.head.ref }}
-          fetch-depth: 2
-      - uses: actions/setup-go@v4.1.0
-        with:
-          go-version: '1.19'
-      - name: Run tests
-        timeout-minutes: 10
-        env:
-          TF_ACC: "1"
-          BLOXONE_HOST: ${{ secrets.BLOXONE_HOST }}
-          BLOXONE_API_KEY: ${{ secrets.BLOXONE_API_KEY }}
-          DHCP_HOST: ${{ secrets.DHCP_HOST }}
-          DNS_HOST: ${{ secrets.DNS_HOST }}
-        run: |
-          go test $(go list ./... | grep -v 'vendor') -v -cover
+    - uses: actions/checkout@v4.1.1
+    - uses: bflad/tfproviderlint-github-action@master
+      with:
+        args: ./...
