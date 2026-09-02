@@ -342,7 +342,7 @@ var ConfigAuthZoneResourceSchemaAttributes = map[string]schema.Attribute{
 				path.MatchRoot("nsgs"),
 			),
 		},
-		MarkdownDescription: "The resource identifier of the nameserver group. Can be configured only when Unified Nameservers is enabled.",
+		MarkdownDescription: "The resource identifier of the nameserver group. Cannot be configured if _nameservers_ are configured. Can be configured only when Unified Nameservers is enabled.",
 	},
 	"nsgs": schema.ListAttribute{
 		ElementType: types.StringType,

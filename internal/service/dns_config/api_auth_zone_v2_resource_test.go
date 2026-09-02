@@ -308,20 +308,18 @@ func TestAccAuthZoneV2Resource_Nameservers(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "nameservers.0.fqdn", "a.com."),
 					resource.TestCheckResourceAttr(resourceName, "nameservers.0.origin", "external"),
 					resource.TestCheckResourceAttr(resourceName, "nameservers.0.role", "primary"),
-					resource.TestCheckResourceAttr(resourceName, "nameservers.0.stealth", "false"),
 					resource.TestCheckResourceAttr(resourceName, "nameservers.0.tsig_enabled", "false"),
 				),
 			},
 			// Update - with tsig_enabled enabled
 			{
-				Config: testAccAuthZoneV2Nameservers(fqdn, "3.3.3.3", "c.com.", "secondary", "true", "true"),
+				Config: testAccAuthZoneV2Nameservers(fqdn, "3.3.3.3", "c.com.", "primary", "true", "true"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAuthZoneExists(context.Background(), resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "nameservers.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "nameservers.0.address", "3.3.3.3"),
 					resource.TestCheckResourceAttr(resourceName, "nameservers.0.fqdn", "c.com."),
 					resource.TestCheckResourceAttr(resourceName, "nameservers.0.role", "primary"),
-					resource.TestCheckResourceAttr(resourceName, "nameservers.0.stealth", "true"),
 					resource.TestCheckResourceAttr(resourceName, "nameservers.0.tsig_enabled", "true"),
 				),
 			},
@@ -347,22 +345,21 @@ func TestAccAuthZoneV2Resource_NameserversSecondary(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "nameservers.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "nameservers.0.address", "1.1.1.1"),
 					resource.TestCheckResourceAttr(resourceName, "nameservers.0.fqdn", "a.com."),
-					resource.TestCheckResourceAttr(resourceName, "nameservers.0.origin", "external"),
-					resource.TestCheckResourceAttr(resourceName, "nameservers.0.role", "primary"),
+					resource.TestCheckResourceAttr(resourceName, "nameservers.0.role", "secondary"),
 					resource.TestCheckResourceAttr(resourceName, "nameservers.0.stealth", "false"),
 					resource.TestCheckResourceAttr(resourceName, "nameservers.0.tsig_enabled", "false"),
 				),
 			},
 			// Update - with tsig_enabled enabled
 			{
-				Config: testAccAuthZoneV2Nameservers(fqdn, "3.3.3.3", "c.com.", "secondary", "false", "true"),
+				Config: testAccAuthZoneV2Nameservers(fqdn, "3.3.3.3", "c.com.", "secondary", "true", "true"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAuthZoneExists(context.Background(), resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "nameservers.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "nameservers.0.address", "3.3.3.3"),
 					resource.TestCheckResourceAttr(resourceName, "nameservers.0.fqdn", "c.com."),
-					resource.TestCheckResourceAttr(resourceName, "nameservers.0.role", "primary"),
-					resource.TestCheckResourceAttr(resourceName, "nameservers.0.stealth", "false"),
+					resource.TestCheckResourceAttr(resourceName, "nameservers.0.role", "secondary"),
+					resource.TestCheckResourceAttr(resourceName, "nameservers.0.stealth", "true"),
 					resource.TestCheckResourceAttr(resourceName, "nameservers.0.tsig_enabled", "true"),
 				),
 			},
@@ -857,7 +854,22 @@ resource "bloxone_dns_auth_zone" "test_notify" {
 }
 
 func testAccAuthZoneV2Nameservers(fqdn, address, nsqdn, role, stealth, tsigEnabled string) string {
+	tsigResource := ""
+	tsigKey := ""
+	if tsigEnabled == "true" {
+		tsigResource = fmt.Sprintf(`
+resource "bloxone_keys_tsig" "test" {
+    name = %q
+}`, fqdn)
+		tsigKey = "tsig_key = { key = bloxone_keys_tsig.test.id }"
+	}
+	stealthField := ""
+	if role == "secondary" {
+		stealthField = fmt.Sprintf("stealth = %s", stealth)
+	}
 	return fmt.Sprintf(`
+%s
+
 resource "bloxone_dns_auth_zone" "test_nameservers" {
     fqdn         = %q
     nameservers = [
@@ -866,10 +878,12 @@ resource "bloxone_dns_auth_zone" "test_nameservers" {
             fqdn         = %q
             role         = %q
             tsig_enabled = %s
+            %s
+            %s
         }
     ]
 }
-`, fqdn, address, nsqdn, role, tsigEnabled)
+`, tsigResource, fqdn, address, nsqdn, role, tsigEnabled, stealthField, tsigKey)
 }
 
 func testAccAuthZoneV2Nsg(fqdn, nsg1Name, nsg2Name, nsgRef string) string {
