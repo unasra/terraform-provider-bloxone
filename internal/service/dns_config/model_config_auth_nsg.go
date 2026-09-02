@@ -3,13 +3,16 @@ package dns_config
 import (
 	"context"
 
+	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
+	"github.com/hashicorp/terraform-plugin-framework/path"
 	schema "github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/mapdefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 
@@ -115,8 +118,18 @@ var ConfigAuthNSGResourceSchemaAttributes = map[string]schema.Attribute{
 		NestedObject: schema.NestedAttributeObject{
 			Attributes: ConfigNameserverResourceSchemaAttributes,
 		},
-		Optional:            true,
-		Computed:            true,
+		Optional: true,
+		Computed: true,
+		Validators: []validator.List{
+			listvalidator.ConflictsWith(
+				path.MatchRoot("external_primaries"),
+				path.MatchRoot("external_secondaries"),
+				path.MatchRoot("internal_secondaries"),
+				path.MatchRoot("grid_primaries"),
+				path.MatchRoot("grid_secondaries"),
+				path.MatchRoot("nsgs"),
+			),
+		},
 		MarkdownDescription: "Optional. A list of DNS Nameservers of various roles.",
 	},
 	"nsgs": schema.ListAttribute{

@@ -241,7 +241,7 @@ func (r *AuthZoneResource) ValidateConfig(ctx context.Context, req resource.Vali
 		resp.Diagnostics.AddAttributeError(
 			path.Root("primary_type"),
 			"Invalid attribute combination",
-			"Primary Type cannot be provided unified nameservers is enabled",
+			"Primary Type cannot be provided when unified nameservers is enabled",
 		)
 	}
 
