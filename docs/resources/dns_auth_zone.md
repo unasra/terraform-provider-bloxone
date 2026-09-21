@@ -98,7 +98,7 @@ resource "bloxone_dns_auth_zone" "example" {
 - `max_records_per_type` (Number) The maximum number of records that can be stored in an RRset (records of same name and type), to prevent a slowdown in query processing due to an excessive number of those RRsets. The limit is enforced when serving the zone on-prem, not at the time of record creation or update. Exceeding the limit will result in the zone failing to load or to be updated. If 0, it means there is no limit. Defaults to _2000_.
 - `max_types_per_name` (Number) The maximum number of record types that can be stored for an owner name, to prevent a slowdown in query processing due to an excessive number of those records. The limit is enforced when serving the zone on-prem, not at the time of record creation or update. Exceeding the limit will result in the zone failing to load or to be updated. If 0, it means there is no limit. Defaults to _100_.
 - `nameservers` (Attributes List) Optional. A list of DNS Nameservers of various roles. Cannot be configured if _nsg_ is configured. Can be configured only when Unified Nameservers is enabled. (see [below for nested schema](#nestedatt--nameservers))
-- `nios_grids_metadata` (Map of String) NIOS Grids Metadata holds multiple NIOS grids data.
+- `nios_grids_metadata` (Map of String) NIOS Metadata holds NIOS grid's data.
 - `notify` (Boolean) Also notify all external secondary DNS servers if enabled.  Defaults to _false_.
 - `nsg` (String) The resource identifier of the nameserver group. Cannot be configured if _nameservers_ are configured. Can be configured only when Unified Nameservers is enabled.
 - `nsgs` (List of String) List of nameserver group identifiers. Can be configured only when Unified Nameservers is disabled.
